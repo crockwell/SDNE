@@ -96,6 +96,7 @@ if __name__ == "__main__":
                     print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
                 fout.flush()
                 model.save_model(path + '/epoch' + str(epochs) + ".model")
+                sio.savemat(path + '/embedding.mat',{'embedding':embedding})
             if epochs == config.epochs_limit:
                 print "exceed epochs limit terminating"
                 break
