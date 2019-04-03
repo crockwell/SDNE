@@ -21,6 +21,8 @@ class Config(object):
             self.restore_model = conf.get("Model_Setup", "restore_model")
         else:
             self.restore_model = False
+            
+        self.start_epoch = conf.get("Model_Setup", "start_epoch")
 
         ## embedding data check
 

@@ -7,8 +7,9 @@ class rbm:
         # shape[0] means the number of visible units
         # shape[1] means the number of hidden units
         self.para = para
-        self.sess = tf.Session()
+        self.sess = tf.Session()#config=tf.ConfigProto(log_device_placement=True))
         stddev = 1.0 / np.sqrt(shape[0])
+        #with tf.device('/'):
         self.W = tf.Variable(tf.random_normal([shape[0], shape[1]], stddev = stddev), name = "Wii")
         self.bv = tf.Variable(tf.zeros(shape[0]), name = "a")
         self.bh = tf.Variable(tf.zeros(shape[1]), name = "b")

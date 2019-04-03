@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import time
 import copy
+from tqdm import tqdm
 import random
 from rbm import *
 
@@ -121,20 +122,22 @@ class SDNE:
         def assign(a, b):
             op = a.assign(b)
             self.sess.run(op)
-        init = tf.global_variables_initializer()       
+        init = tf.global_variables_initializer()  
         self.sess.run(init)
         if self.config.restore_model:
             self.restore_model(self.config.restore_model)
             print "restore model" + self.config.restore_model
         elif self.config.DBN_init:
-            shape = self.struct
+            shape = self.struct # nodes, hidden, embedding dim
             myRBMs = []
-            for i in range(len(shape) - 1):
+            for i in range(len(shape) - 1): # 2 if 1 hidden layer
                 myRBM = rbm([shape[i], shape[i+1]], {"batch_size": self.config.dbn_batch_size, "learning_rate":self.config.dbn_learning_rate})
                 myRBMs.append(myRBM)
                 for epoch in range(self.config.dbn_epochs):
                     error = 0
-                    for batch in range(0, data.N, self.config.dbn_batch_size):
+                    print('batches',data.N, self.config.dbn_batch_size)
+                    batches = data.N / self.config.dbn_batch_size
+                    for batch in tqdm(range(batches)):
                         mini_batch = data.sample(self.config.dbn_batch_size).X
                         for k in range(len(myRBMs) - 1):
                             mini_batch = myRBMs[k].getH(mini_batch)
@@ -148,6 +151,7 @@ class SDNE:
                 name = "decoder" + str(self.layers - i - 2)
                 assign(self.W[name], W.transpose())
                 assign(self.b[name], bv)
+                print('__5.4__')
         self.is_Init = True
 
     def __get_feed_dict(self, data):

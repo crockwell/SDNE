@@ -25,29 +25,44 @@ from optparse import OptionParser
 import os
 
 if __name__ == "__main__":
-    os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0'#,1,2,3'
     parser = OptionParser()
     parser.add_option("-c",dest = "config_file", action = "store", metavar = "CONFIG FILE")
+    parser.add_option("-e",dest = "experiment_name", action = "store", metavar = "EXPERIMENT NAME")
+    '''
+    *** IF you are continuing experiment, should make experiment_name
+    same as folder in patent.ini from which you are getting it! ***
+    '''
     options, _ = parser.parse_args()
     if options.config_file == None:
         raise IOError("no config file specified")
-
+    if options.experiment_name == None:
+        raise IOError("no experiment file specified")
+        
     config = Config(options.config_file)
+    
+    #tt = time.ctime().replace(' ','-')
+    path = os.path.join("result", config.embedding_filename, options.experiment_name)
+    try: os.makedirs(path)
+    except OSError: pass
     
     train_graph_data = Graph(config.train_graph_file, config.ng_sample_ratio)
    
     if config.origin_graph_file:
         origin_graph_data = Graph(config.origin_graph_file, config.ng_sample_ratio)
-
+        
     if config.label_file:
         #load label for classification
         train_graph_data.load_label_data(config.label_file)
     
     config.struct[0] = train_graph_data.N
-    
+        
     model = SDNE(config)
-    model.do_variables_init(train_graph_data)
+    model.do_variables_init(train_graph_data) # takes 40 mins per epoch (per layer?)
+    # only need to do this once -- once model loaded is fixed.
     embedding = None
+    
+    print('__4__')
     while (True):
         mini_batch = train_graph_data.sample(config.batch_size, do_shuffle = False)
         if embedding is None:
@@ -57,18 +72,15 @@ if __name__ == "__main__":
         if train_graph_data.is_epoch_end:
             break
     
-
-    epochs = 0
+    print('__5__')
+    epochs = config.start_epoch
     batch_n = 0
     
     
-    tt = time.ctime().replace(' ','-')
-    path = "./result/" + config.embedding_filename + '-' + tt
-    os.system("mkdir " + path)
-    fout = open(path + "/log.txt","w")  
-    model.save_model(path + '/epoch0.model')
+    fout = open(os.path.join(path, "log.txt"),"a+")  
+    model.save_model(os.path.join(path, 'epoch' + str(epochs) + '.model'))
 
-    sio.savemat(path + '/embedding.mat',{'embedding':embedding})
+    sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
     print "!!!!!!!!!!!!!"
     while (True):
         if train_graph_data.is_epoch_end:
@@ -95,7 +107,7 @@ if __name__ == "__main__":
                     data = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
                     print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
                 fout.flush()
-                model.save_model(path + '/epoch' + str(epochs) + ".model")
+                model.save_model(os.path.join(path, 'epoch' + str(epochs) + '.model'))
                 sio.savemat(path + '/embedding.mat',{'embedding':embedding})
             if epochs == config.epochs_limit:
                 print "exceed epochs limit terminating"
