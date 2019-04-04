@@ -74,7 +74,9 @@ if __name__ == "__main__":
             if train_graph_data.is_epoch_end:
                 break
             if en * 10 > N * ct:
-                print(en/N*100,"% done embedding")
+                #print(en/N*100,"% done embedding")
+                #print "%d% done embedding" % (100*en/N)
+                print("{}% done embedding".format(100*en/N))
                 ct += 1
         #print(np.shape(embedding))
 
@@ -92,7 +94,9 @@ if __name__ == "__main__":
             mini_batch, en, N = train_graph_data.sample(config.batch_size)
             loss = model.fit(mini_batch)
             if en * 10 > N * ct:
-                print(en/N*100,"% done training epoch")
+                #print(en/N*100 + " % done training epoch")
+                #print "%d% done training epoch" % (100*en/N)
+                print("{}% done training epoch".format(100*en/N))
                 ct += 1
         loss = 0
         if epochs % config.display == 0: # should probably change this to be 5 or something -- very slow!
@@ -108,7 +112,9 @@ if __name__ == "__main__":
                 if train_graph_data.is_epoch_end:
                     break
                 if en * 10 > N * ct:
-                    print(en/N*100,"% done embedding")
+                    #print(en/N*100 + " % done embedding")
+                    #print "%d% done embedding" % (100*en/N)
+                    print("{}% done embedding".format(100*en/N))
                     ct += 1
                     
             print('embed shape',np.shape(embedding))

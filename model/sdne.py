@@ -140,7 +140,8 @@ class SDNE:
                     print('batches',data.N, self.config.dbn_batch_size)
                     batches = data.N / self.config.dbn_batch_size
                     for batch in tqdm(range(batches)):
-                        mini_batch, _, _ = data.sample(self.config.dbn_batch_size).X
+                        tmp, _, _ = data.sample(self.config.dbn_batch_size)
+                        mini_batch = tmp.X
                         for k in range(len(myRBMs) - 1):
                             mini_batch = myRBMs[k].getH(mini_batch)
                         error += myRBM.fit(mini_batch)
