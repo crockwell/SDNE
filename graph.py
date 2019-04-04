@@ -85,7 +85,7 @@ class Graph(object):
             en = 0
             self.is_epoch_end = True
         self.st = en
-        return mini_batch
+        return mini_batch, en, self.N
     
     def subgraph(self, method, sample_ratio):
         new_N = int(sample_ratio * self.N)

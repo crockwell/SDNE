@@ -127,6 +127,8 @@ class SDNE:
         if self.config.restore_model:
             self.restore_model(self.config.restore_model)
             print "restore model" + self.config.restore_model
+            self.is_Init = True
+            return True
         elif self.config.DBN_init:
             shape = self.struct # nodes, hidden, embedding dim
             myRBMs = []
@@ -138,7 +140,7 @@ class SDNE:
                     print('batches',data.N, self.config.dbn_batch_size)
                     batches = data.N / self.config.dbn_batch_size
                     for batch in tqdm(range(batches)):
-                        mini_batch = data.sample(self.config.dbn_batch_size).X
+                        mini_batch, _, _ = data.sample(self.config.dbn_batch_size).X
                         for k in range(len(myRBMs) - 1):
                             mini_batch = myRBMs[k].getH(mini_batch)
                         error += myRBM.fit(mini_batch)
@@ -152,7 +154,8 @@ class SDNE:
                 assign(self.W[name], W.transpose())
                 assign(self.b[name], bv)
                 print('__5.4__')
-        self.is_Init = True
+            self.is_Init = True
+            return False
 
     def __get_feed_dict(self, data):
         X = data.X

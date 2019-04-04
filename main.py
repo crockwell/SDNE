@@ -58,63 +58,77 @@ if __name__ == "__main__":
     config.struct[0] = train_graph_data.N
         
     model = SDNE(config)
-    model.do_variables_init(train_graph_data) # takes 40 mins per epoch (per layer?)
+    restored = model.do_variables_init(train_graph_data) # takes 40 mins per epoch (per layer?)
     # only need to do this once -- once model loaded is fixed.
     embedding = None
     
-    print('__4__')
-    while (True):
-        mini_batch = train_graph_data.sample(config.batch_size, do_shuffle = False)
-        if embedding is None:
-            embedding = model.get_embedding(mini_batch)
-        else:
-            embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
-        if train_graph_data.is_epoch_end:
-            break
-    
-    print('__5__')
-    epochs = config.start_epoch
-    batch_n = 0
-    
-    
-    fout = open(os.path.join(path, "log.txt"),"a+")  
-    model.save_model(os.path.join(path, 'epoch' + str(epochs) + '.model'))
-
-    sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
-    print "!!!!!!!!!!!!!"
-    while (True):
-        if train_graph_data.is_epoch_end:
-            loss = 0
-            if epochs % config.display == 0:
-                embedding = None
-                while (True):
-                    mini_batch = train_graph_data.sample(config.batch_size, do_shuffle = False)
-                    loss += model.get_loss(mini_batch)
-                    if embedding is None:
-                        embedding = model.get_embedding(mini_batch)
-                    else:
-                        embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
-                    if train_graph_data.is_epoch_end:
-                        break
-
-                print "Epoch : %d loss : %.3f" % (epochs, loss)
-                print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
-                if config.check_reconstruction:
-                    print >> fout, epochs, "reconstruction:", check_reconstruction(embedding, train_graph_data, config.check_reconstruction)
-                if config.check_link_prediction:
-                    print >> fout, epochs, "link_prediction:", check_link_prediction(embedding, train_graph_data, origin_graph_data, config.check_link_prediction)
-                if config.check_classification:
-                    data = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
-                    print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
-                fout.flush()
-                model.save_model(os.path.join(path, 'epoch' + str(epochs) + '.model'))
-                sio.savemat(path + '/embedding.mat',{'embedding':embedding})
-            if epochs == config.epochs_limit:
-                print "exceed epochs limit terminating"
+    if not restored:
+        print('generating embeddings for epoch 0...')
+        ct = 0
+        while (True):
+            mini_batch, en, N = train_graph_data.sample(config.batch_size, do_shuffle = False)
+            if embedding is None:
+                embedding = model.get_embedding(mini_batch)
+            else:
+                embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
+            if train_graph_data.is_epoch_end:
                 break
-            epochs += 1
-        mini_batch = train_graph_data.sample(config.batch_size)
-        loss = model.fit(mini_batch)
+            if en * 10 > N * ct:
+                print(en/N*100,"% done embedding")
+                ct += 1
+        #print(np.shape(embedding))
+
+        print('saving model from epoch 0...')
+        fout = open(os.path.join(path, "log.txt"),"a+")  
+        model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
+        sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
+        
+    epochs = int(config.start_epoch)
+    batch_n = 0
+    print "training SDNE..."
+    while (True):
+        ct = 0
+        while not train_graph_data.is_epoch_end:
+            mini_batch, en, N = train_graph_data.sample(config.batch_size)
+            loss = model.fit(mini_batch)
+            if en * 10 > N * ct:
+                print(en/N*100,"% done training epoch")
+                ct += 1
+        loss = 0
+        if epochs % config.display == 0: # should probably change this to be 5 or something -- very slow!
+            embedding = None
+            ct = 0
+            while (True):
+                mini_batch, en, N = train_graph_data.sample(config.batch_size, do_shuffle = False)
+                loss += model.get_loss(mini_batch)
+                if embedding is None:
+                    embedding = model.get_embedding(mini_batch)
+                else:
+                    embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
+                if train_graph_data.is_epoch_end:
+                    break
+                if en * 10 > N * ct:
+                    print(en/N*100,"% done embedding")
+                    ct += 1
+                    
+            print('embed shape',np.shape(embedding))
+
+            print "Epoch : %d loss : %.3f" % (epochs, loss)
+            print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
+            if config.check_reconstruction:
+                print >> fout, epochs, "reconstruction:", check_reconstruction(embedding, train_graph_data, config.check_reconstruction)
+            if config.check_link_prediction:
+                print >> fout, epochs, "link_prediction:", check_link_prediction(embedding, train_graph_data, origin_graph_data, config.check_link_prediction)
+            if config.check_classification:
+                data, en, N = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
+                print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
+            fout.flush()
+            model.save_model(os.path.join(path, 'epoch' + str(epochs) + '.model'))
+            sio.savemat(path + '/embedding.mat',{'embedding':embedding})
+        if epochs >= config.epochs_limit:
+            print "exceed epochs limit terminating"
+            break
+        epochs += 1
 
     sio.savemat(path + '/embedding.mat',{'embedding':embedding})
     fout.close()
