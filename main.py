@@ -62,6 +62,7 @@ if __name__ == "__main__":
     # only need to do this once -- once model loaded is fixed.
     embedding = None
     
+    fout = open(os.path.join(path, "log.txt"),"a+")  
     if not restored:
         print('generating embeddings for epoch 0...')
         ct = 0
@@ -81,7 +82,6 @@ if __name__ == "__main__":
         #print(np.shape(embedding))
 
         print('saving model from epoch 0...')
-        fout = open(os.path.join(path, "log.txt"),"a+")  
         model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
         sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
         
