@@ -87,6 +87,13 @@ class Graph(object):
         self.st = en
         return mini_batch, en, self.N
     
+    def sample_val(self, val_nodes):
+        mini_batch = Dotdict()
+        index = val_nodes
+        mini_batch.X = self.adj_matrix[index].toarray()
+        mini_batch.adjacent_matriX = self.adj_matrix[index].toarray()[:][:,index]
+        return mini_batch
+    
     def subgraph(self, method, sample_ratio):
         new_N = int(sample_ratio * self.N)
         cur_N = 0

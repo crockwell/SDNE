@@ -13,12 +13,11 @@ class Dotdict(dict):
 
 
 def getSimilarity(result):
-    print "getting similarity..."
     return np.dot(result, result.T)
     
 def check_reconstruction(embedding, graph_data, check_index, val_nodes):
     def get_precisionK(embedding, data, max_index, val_nodes):
-        print "get precisionK..."
+        print "get reconstruction precision@K..."
         similarity = getSimilarity(embedding).reshape(-1)
         sortedInd = np.argsort(similarity)
         cur = 0
@@ -26,7 +25,6 @@ def check_reconstruction(embedding, graph_data, check_index, val_nodes):
         precisionK = []
         sortedInd = sortedInd[::-1]
         N = np.shape(embedding)[0]
-        print('new N', N, 'old N', data.N)
         for ind in sortedInd:
             x = ind / N#data.N
             y = ind % N#data.N
@@ -49,7 +47,7 @@ def check_reconstruction(embedding, graph_data, check_index, val_nodes):
 
 def check_link_prediction(embedding, train_graph_data, origin_graph_data, check_index, val_nodes):
     def get_precisionK(embedding, train_graph_data, origin_graph_data, max_index, val_nodes):
-        print "get precisionK..."
+        print "get Link Prediction precision @K..."
         similarity = getSimilarity(embedding).reshape(-1)
         sortedInd = np.argsort(similarity)
         cur = 0
@@ -57,7 +55,6 @@ def check_link_prediction(embedding, train_graph_data, origin_graph_data, check_
         precisionK = []
         sortedInd = sortedInd[::-1]
         N = np.shape(embedding)[0]#train_graph_data.N
-        print('new N', N, 'old N', train_graph_data.N)
         for ind in sortedInd:
             x = ind / N
             y = ind % N

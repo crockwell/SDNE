@@ -97,6 +97,10 @@ if __name__ == "__main__":
         if epochs % config.display == 0: # should probably change this to be 5 or something -- very slow!
             embedding = None
             ct = 0
+            mini_batch = train_graph_data.sample_val(val_nodes)
+            loss += model.get_loss(mini_batch)
+            embedding = model.get_embedding(mini_batch)
+            '''
             while (True):
                 mini_batch, en, N = train_graph_data.sample(config.batch_size, do_shuffle = False)
                 loss += model.get_loss(mini_batch)
@@ -111,6 +115,7 @@ if __name__ == "__main__":
                     #print "%d% done embedding" % (100*en/N)
                     print("{}% done embedding".format(100*en/N))
                     ct += 1
+            '''
                     
             print('embed shape',np.shape(embedding))
 
@@ -118,7 +123,7 @@ if __name__ == "__main__":
             print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
             
             # get smaller embeddings so can calculate reconstruction & link prediction
-            embedding_small = embedding[val_nodes]
+            embedding_small = embedding#[val_nodes]
             
             if config.check_reconstruction:
                 print >> fout, epochs, "reconstruction:", check_reconstruction(embedding_small, train_graph_data, config.check_reconstruction, val_nodes)
