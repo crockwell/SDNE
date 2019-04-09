@@ -60,7 +60,7 @@ if __name__ == "__main__":
     model = SDNE(config)
     restored = model.do_variables_init(train_graph_data) # takes 40 mins per epoch (per layer?)
     # only need to do this once -- once model loaded is fixed.
-    embedding = None
+    embedding = None   
     
     fout = open(os.path.join(path, "log.txt"),"a+")  
     if not restored:
@@ -84,20 +84,15 @@ if __name__ == "__main__":
         print('saving model from epoch 0...')
         model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
         sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
-        
+    
+    with open("GraphData/val_nodes.txt") as f:
+        val_nodes = map(int, f) 
+    
     epochs = int(config.start_epoch)
     batch_n = 0
     print "training SDNE..."
     while (True):
-        ct = 0
-        while not train_graph_data.is_epoch_end:
-            mini_batch, en, N = train_graph_data.sample(config.batch_size)
-            loss = model.fit(mini_batch)
-            if en * 10 > N * ct:
-                #print(en/N*100 + " % done training epoch")
-                #print "%d% done training epoch" % (100*en/N)
-                print("{}% done training epoch".format(100*en/N))
-                ct += 1
+        # validate
         loss = 0
         if epochs % config.display == 0: # should probably change this to be 5 or something -- very slow!
             embedding = None
@@ -123,13 +118,12 @@ if __name__ == "__main__":
             print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
             
             # get smaller embeddings so can calculate reconstruction & link prediction
-            small = int(.001 * np.shape(embedding)[0])
-            embedding_small = embedding[:small]
+            embedding_small = embedding[val_nodes]
             
             if config.check_reconstruction:
-                print >> fout, epochs, "reconstruction:", check_reconstruction(embedding_small, train_graph_data, config.check_reconstruction)
+                print >> fout, epochs, "reconstruction:", check_reconstruction(embedding_small, train_graph_data, config.check_reconstruction, val_nodes)
             if config.check_link_prediction:
-                print >> fout, epochs, "link_prediction:", check_link_prediction(embedding_small, train_graph_data, origin_graph_data, config.check_link_prediction)
+                print >> fout, epochs, "link_prediction:", check_link_prediction(embedding_small, train_graph_data, origin_graph_data, config.check_link_prediction, val_nodes)
             if config.check_classification:
                 data, en, N = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
                 print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
@@ -140,6 +134,16 @@ if __name__ == "__main__":
             print "exceed epochs limit terminating"
             break
         epochs += 1
+        # train
+        ct = 0
+        while not train_graph_data.is_epoch_end:
+            mini_batch, en, N = train_graph_data.sample(config.batch_size)
+            loss = model.fit(mini_batch)
+            if en * 10 > N * ct:
+                #print(en/N*100 + " % done training epoch")
+                #print "%d% done training epoch" % (100*en/N)
+                print("{}% done training epoch".format(100*en/N))
+                ct += 1
 
     sio.savemat(path + '/embedding.mat',{'embedding':embedding})
     fout.close()
