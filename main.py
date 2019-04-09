@@ -121,10 +121,15 @@ if __name__ == "__main__":
 
             print "Epoch : %d loss : %.3f" % (epochs, loss)
             print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
+            
+            # get smaller embeddings so can calculate reconstruction & link prediction
+            small = int(.001 * np.shape(embedding)[0])
+            embedding_small = embedding[:small]
+            
             if config.check_reconstruction:
-                print >> fout, epochs, "reconstruction:", check_reconstruction(embedding, train_graph_data, config.check_reconstruction)
+                print >> fout, epochs, "reconstruction:", check_reconstruction(embedding_small, train_graph_data, config.check_reconstruction)
             if config.check_link_prediction:
-                print >> fout, epochs, "link_prediction:", check_link_prediction(embedding, train_graph_data, origin_graph_data, config.check_link_prediction)
+                print >> fout, epochs, "link_prediction:", check_link_prediction(embedding_small, train_graph_data, origin_graph_data, config.check_link_prediction)
             if config.check_classification:
                 data, en, N = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
                 print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)

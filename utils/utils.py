@@ -25,9 +25,11 @@ def check_reconstruction(embedding, graph_data, check_index):
         count = 0
         precisionK = []
         sortedInd = sortedInd[::-1]
+        N = np.shape(embedding)[0]
+        print('new N', N, 'old N', data.N)
         for ind in sortedInd:
-            x = ind / data.N
-            y = ind % data.N
+            x = ind / N#data.N
+            y = ind % N#data.N
             count += 1
             if (data.adj_matrix[x].toarray()[0][y] == 1 or x == y):
                 cur += 1 
@@ -52,11 +54,13 @@ def check_link_prediction(embedding, train_graph_data, origin_graph_data, check_
         count = 0
         precisionK = []
         sortedInd = sortedInd[::-1]
-        N = train_graph_data.N
+        N = np.shape(embedding)[0]#train_graph_data.N
+        print('new N', N, 'old N', train_graph_data.N)
         for ind in sortedInd:
             x = ind / N
             y = ind % N
-            if (x == y or train_graph_data.adj_matrix[x].toarray()[0][y] == 1):
+            # TODO: recalcuate this!
+            if (x == y or train_graph_data.adj_matrix[x].toarray()[0][y] == 1): 
                 continue 
             count += 1
             if (origin_graph_data.adj_matrix[x].toarray()[0][y] == 1):

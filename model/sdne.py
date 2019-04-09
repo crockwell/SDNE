@@ -154,7 +154,6 @@ class SDNE:
                 name = "decoder" + str(self.layers - i - 2)
                 assign(self.W[name], W.transpose())
                 assign(self.b[name], bv)
-                print('__5.4__')
             self.is_Init = True
             return False
 
