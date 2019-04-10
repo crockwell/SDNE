@@ -63,6 +63,7 @@ if __name__ == "__main__":
     embedding = None   
     
     fout = open(os.path.join(path, "log.txt"),"a+")  
+    '''
     if not restored:
         print('generating embeddings for epoch 0...')
         ct = 0
@@ -84,7 +85,7 @@ if __name__ == "__main__":
         print('saving model from epoch 0...')
         model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
         sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
-    
+    '''
     with open("GraphData/val_nodes.txt") as f:
         val_nodes = map(int, f) 
     
@@ -94,12 +95,12 @@ if __name__ == "__main__":
     while (True):
         # validate
         loss = 0
-        if epochs % config.display == 0: # should probably change this to be 5 or something -- very slow!
+        if epochs % config.display == 0:
             embedding = None
             ct = 0
             mini_batch = train_graph_data.sample_val(val_nodes)
             loss += model.get_loss(mini_batch)
-            embedding = model.get_embedding(mini_batch)
+            embedding = model.get_embedding(mini_batch) # size 577
             '''
             while (True):
                 mini_batch, en, N = train_graph_data.sample(config.batch_size, do_shuffle = False)
@@ -117,8 +118,6 @@ if __name__ == "__main__":
                     ct += 1
             '''
                     
-            print('embed shape',np.shape(embedding))
-
             print "Epoch : %d loss : %.3f" % (epochs, loss)
             print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
             
@@ -141,6 +140,9 @@ if __name__ == "__main__":
         epochs += 1
         # train
         ct = 0
+        
+        mini_batch, en, N = train_graph_data.sample(config.batch_size)
+        loss = model.fit(mini_batch)
         while not train_graph_data.is_epoch_end:
             mini_batch, en, N = train_graph_data.sample(config.batch_size)
             loss = model.fit(mini_batch)
