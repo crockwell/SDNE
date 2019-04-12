@@ -15,7 +15,7 @@ class Dotdict(dict):
 def getSimilarity(result):
     return np.dot(result, result.T)
     
-def check_reconstruction(embedding, graph_data, check_index, val_nodes):
+def check_reconstruction(embedding, graph_data, check_index, val_nodes, val_rule):
     def get_precisionK(embedding, data, max_index, val_nodes):
         print "get reconstruction precision@K..."
         similarity = getSimilarity(embedding).reshape(-1)
@@ -36,18 +36,18 @@ def check_reconstruction(embedding, graph_data, check_index, val_nodes):
             precisionK.append(1.0 * cur / count)
             if count > max_index:
                 break
-        return precisionK
+        return precisionK, cur
         
-    precisionK = get_precisionK(embedding, graph_data, np.max(check_index), val_nodes)
+    precisionK, cur = get_precisionK(embedding, graph_data, np.max(check_index), val_nodes)
     ret = []
     for index in check_index:
-        print "precisonK[%d] %.2f" % (index, precisionK[index - 1])
+        print "precisonK[%d], %s , %.3f , %i count" % (index, val_rule, precisionK[index - 1], cur)
         ret.append(precisionK[index - 1])
     return ret
 
-def check_link_prediction(embedding, train_graph_data, origin_graph_data, check_index, val_nodes):
+def check_link_prediction(embedding, train_graph_data, origin_graph_data, check_index, val_nodes, val_rule):
     def get_precisionK(embedding, train_graph_data, origin_graph_data, max_index, val_nodes):
-        print "get Link Prediction precision @K..."
+        print "get Link Prediction precision @K..." 
         similarity = getSimilarity(embedding).reshape(-1)
         sortedInd = np.argsort(similarity)
         cur = 0
@@ -68,11 +68,11 @@ def check_link_prediction(embedding, train_graph_data, origin_graph_data, check_
             precisionK.append(1.0 * cur / count)
             if count > max_index:
                 break
-        return precisionK
-    precisionK = get_precisionK(embedding, train_graph_data, origin_graph_data, np.max(check_index), val_nodes)
+        return precisionK, cur
+    precisionK, cur = get_precisionK(embedding, train_graph_data, origin_graph_data, np.max(check_index), val_nodes)
     ret = []
     for index in check_index:
-        print "precisonK[%d] %.2f" % (index, precisionK[index - 1])
+        print "precisonK[%d], %s , %.3f , %i count" % (index, val_rule, precisionK[index - 1], cur)
         ret.append(precisionK[index - 1])
     return ret
  
