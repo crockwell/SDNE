@@ -86,51 +86,46 @@ if __name__ == "__main__":
         model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
         sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
     '''
-    with open("GraphData/val_nodes.txt") as f:
-        val_nodes = map(int, f) 
+    all_val_files = ["GraphData/val_nodes.txt", "GraphData/val_nodes_2edge.txt", "GraphData/val_nodes_8edge.txt",
+                    "GraphData/val_nodes_8edge.txt", "GraphData/val_nodes_16edge.txt"]
+    all_val_nodes = []
+    for file in all_val_files:
+        with open(file) as f:
+            all_val_nodes.append(map(int, f))
+    all_val_rules = ['normal', '2 edge min', '4 edge min', '8 edge min', '16 edge min']
+        
     
     epochs = int(config.start_epoch)
     batch_n = 0
     print "training SDNE..."
     while (True):
         # validate
-        loss = 0
         if epochs % config.display == 0:
-            embedding = None
             ct = 0
-            mini_batch = train_graph_data.sample_val(val_nodes)
-            loss += model.get_loss(mini_batch)
-            embedding = model.get_embedding(mini_batch) # size 577
-            '''
-            while (True):
-                mini_batch, en, N = train_graph_data.sample(config.batch_size, do_shuffle = False)
-                loss += model.get_loss(mini_batch)
-                if embedding is None:
-                    embedding = model.get_embedding(mini_batch)
-                else:
-                    embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
-                if train_graph_data.is_epoch_end:
-                    break
-                if en * 10 > N * ct:
-                    #print(en/N*100 + " % done embedding")
-                    #print "%d% done embedding" % (100*en/N)
-                    print("{}% done embedding".format(100*en/N))
-                    ct += 1
-            '''
+            for val_nodes, val_rule in zip(all_val_nodes, all_val_rules):
+                embedding = None
+                loss = 0
+                length = len(val_nodes)
+                for i in range(10):
+                    start_idx = i*577
+                    sample_nodes = val_nodes[start_idx:start_idx+576]
+                    mini_batch = train_graph_data.sample_val(sample_nodes)
+                    loss += model.get_loss(mini_batch)
+                    if embedding is None:
+                        embedding = model.get_embedding(mini_batch)
+                    else:
+                        embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
                     
-            print "Epoch : %d loss : %.3f" % (epochs, loss)
-            print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
-            
-            # get smaller embeddings so can calculate reconstruction & link prediction
-            embedding_small = embedding#[val_nodes]
-            
-            if config.check_reconstruction:
-                print >> fout, epochs, "reconstruction:", check_reconstruction(embedding_small, train_graph_data, config.check_reconstruction, val_nodes)
-            if config.check_link_prediction:
-                print >> fout, epochs, "link_prediction:", check_link_prediction(embedding_small, train_graph_data, origin_graph_data, config.check_link_prediction, val_nodes)
-            if config.check_classification:
-                data, en, N = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
-                print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
+                print "Epoch : %d, %s , loss : %.3f" % (epochs, val_rule, loss)
+                print >>fout, "Epoch : %d, %s , loss : %.3f" % (epochs, val_rule, loss)
+
+                if config.check_reconstruction:
+                    print >> fout, epochs, "reconstruction:", check_reconstruction(embedding, train_graph_data, config.check_reconstruction, val_nodes, val_rule)
+                if config.check_link_prediction:
+                    print >> fout, epochs, "link_prediction:", check_link_prediction(embedding, train_graph_data, origin_graph_data, config.check_link_prediction, val_nodes, val_rule)
+                if config.check_classification:
+                    data, en, N = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
+                    print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
             fout.flush()
             model.save_model(os.path.join(path, 'epoch' + str(epochs) + '.model'))
             sio.savemat(path + '/embedding.mat',{'embedding':embedding})
