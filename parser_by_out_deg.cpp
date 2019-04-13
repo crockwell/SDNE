@@ -145,17 +145,21 @@ std::multimap<int,int> partition_edges(const std::string &filename, const size_t
       if(!str.find("#")) continue;     //skips the header lines begining with a #, modify later
       else found_numeric = true;
    }
+   std::cout << "here"<< std::endl;
 
-   auto u = std::stoi(str.substr(0, str.find('\t')));     //cit-Patents.txt uses tabs -.-
-   auto v = std::stoi(str.substr(str.find('\t')));
-
+   auto u = std::stoi(str.substr(0, str.find(' ')));     //cit-Patents.txt uses tabs -.-
+   auto v = std::stoi(str.substr(str.find(' ')));
 
    // if(u < up_bnd && v < up_bnd && u >= low_bnd && v >= low_bnd) adj_list.emplace(u,v);
    // else if(u >= up_bnd && v >= low_bnd) future.emplace(u,v); 
    adj_list[u] = {v};
 
+   int counter = 0;
    while(infile >> u >> v)
    {
+      counter++;
+      if(counter % 1000 == 0)
+         std::cout << counter << std::endl;
       if(adj_list.find(u) == adj_list.end()) adj_list[u] = {v};
       else adj_list[u].emplace_back(v);
       // if(u < up_bnd && v < up_bnd && u >= low_bnd && v >= low_bnd) trainfile << u << " " << v << std::endl;
@@ -163,13 +167,19 @@ std::multimap<int,int> partition_edges(const std::string &filename, const size_t
    }
 
    infile.close();
+   std::cout << "Finished parsing edge file" << std::endl;
 
-   std::ofstream subgraphfile("subgraph_filename.txt");
+   std::ofstream subgraphfile(subgraph_filename);
    for(const auto &ht_element : adj_list)
    {
-      if(ht_element.second.size() > min_out_deg)
+      size_t num_ele = ht_element.second.size();
+      if(num_ele >= min_out_deg)
       {
-         for(const auto &val : ht_element.second) subgraphfile << ht_element.first << " " << val << std::endl;
+         for(const auto &val : ht_element.second)
+         {
+            if(adj_list[val].size() > 1)
+               subgraphfile << ht_element.first << " " << val << std::endl;
+         }
       }
    }
 
