@@ -23,25 +23,31 @@ def check_reconstruction(embedding, graph_data, check_index, val_nodes, val_rule
         cur = 0
         count = 0
         precisionK = []
+        scores = []
         sortedInd = sortedInd[::-1]
         N = np.shape(embedding)[0]
         for ind in sortedInd:
             x = ind / N#data.N
             y = ind % N#data.N
+            #if count < 20:
+            #    print(x,y,ind,similarity[ind])
+            #    #print('embed',embedding[x,:],embedding[y,:])
             x_old = val_nodes[x]
             y_old = val_nodes[y]
             count += 1
             if (data.adj_matrix[x_old].toarray()[0][y_old] == 1 or x == y):
                 cur += 1 
+                print(x,y,ind,similarity[ind])
             precisionK.append(1.0 * cur / count)
+            scores.append(cur)
             if count > max_index:
                 break
-        return precisionK, cur
+        return precisionK, scores
         
-    precisionK, cur = get_precisionK(embedding, graph_data, np.max(check_index), val_nodes)
+    precisionK, scores = get_precisionK(embedding, graph_data, np.max(check_index), val_nodes)
     ret = []
     for index in check_index:
-        print "precisonK[%d], %s , %.3f , %i count" % (index, val_rule, precisionK[index - 1], cur)
+        print "precisonK[%d], %s , %.3f , %i count" % (index, val_rule, precisionK[index - 1], scores[index-1])
         ret.append(precisionK[index - 1])
     return ret
 
@@ -54,25 +60,30 @@ def check_link_prediction(embedding, train_graph_data, origin_graph_data, check_
         count = 0
         precisionK = []
         sortedInd = sortedInd[::-1]
+        scores = []
         N = np.shape(embedding)[0]#train_graph_data.N
         for ind in sortedInd:
             x = ind / N
             y = ind % N
             x_old = val_nodes[x]
             y_old = val_nodes[y]
+            #if count < 20:
+            #    print(x,y,ind,similarity[ind])
+            #    print('embed',embedding[x,:],embedding[y,:])
             if (x == y or train_graph_data.adj_matrix[x_old].toarray()[0][y_old] == 1): 
                 continue 
             count += 1
             if (origin_graph_data.adj_matrix[x_old].toarray()[0][y_old] == 1):
                 cur += 1
             precisionK.append(1.0 * cur / count)
+            scores.append(cur)
             if count > max_index:
                 break
-        return precisionK, cur
-    precisionK, cur = get_precisionK(embedding, train_graph_data, origin_graph_data, np.max(check_index), val_nodes)
+        return precisionK, scores
+    precisionK, scores = get_precisionK(embedding, train_graph_data, origin_graph_data, np.max(check_index), val_nodes)
     ret = []
     for index in check_index:
-        print "precisonK[%d], %s , %.3f , %i count" % (index, val_rule, precisionK[index - 1], cur)
+        print "precisonK[%d], %s , %.3f , %i count" % (index, val_rule, precisionK[index - 1], scores[index-1])
         ret.append(precisionK[index - 1])
     return ret
  
