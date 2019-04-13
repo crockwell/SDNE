@@ -86,8 +86,8 @@ if __name__ == "__main__":
         model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
         sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
     '''
-    all_val_files = ["GraphData/val_nodes.txt", "GraphData/val_nodes_2edge.txt", "GraphData/val_nodes_8edge.txt",
-                    "GraphData/val_nodes_8edge.txt", "GraphData/val_nodes_16edge.txt"]
+    all_val_files = ["GraphData/val_nodes_88.txt", "GraphData/val_nodes_2edge_88.txt", "GraphData/val_nodes_8edge_88.txt",
+                    "GraphData/val_nodes_8edge_88.txt", "GraphData/val_nodes_16edge_88.txt"]
     all_val_nodes = []
     for file in all_val_files:
         with open(file) as f:
@@ -107,8 +107,8 @@ if __name__ == "__main__":
                 loss = 0
                 length = len(val_nodes)
                 for i in range(10):
-                    start_idx = i*577
-                    sample_nodes = val_nodes[start_idx:start_idx+576]
+                    start_idx = i*500
+                    sample_nodes = val_nodes[start_idx:start_idx+499]
                     mini_batch = train_graph_data.sample_val(sample_nodes)
                     loss += model.get_loss(mini_batch)
                     if embedding is None:
@@ -127,7 +127,7 @@ if __name__ == "__main__":
                     data, en, N = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
                     print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
             fout.flush()
-            model.save_model(os.path.join(path, 'epoch' + str(epochs) + '.model'))
+            model.save_model(os.path.join(path, 'epoch' + '.model'))
             sio.savemat(path + '/embedding.mat',{'embedding':embedding})
         if epochs >= config.epochs_limit:
             print "exceed epochs limit terminating"

@@ -1,9 +1,9 @@
-# generate 5770 nodes, if possible, with minimum edge count
+# generate 5000 nodes, if possible, with minimum edge count
 import random
 import tqdm
 from collections import Counter
 
-with open('GraphData/train1990-1997.txt') as f:
+with open('GraphData/train1988-1990.txt') as f:
     edge_list = f.read().splitlines()
 
 def get_candidates(count):
@@ -28,7 +28,7 @@ def get_candidates(count):
             nodes_above_count.add(i)
     return nodes_above_count
 
-files = ['GraphData/val_nodes_2edge.txt', 'GraphData/val_nodes_4edge.txt', 'GraphData/val_nodes_8edge.txt', 'GraphData/val_nodes_16edge.txt']
+files = ['GraphData/val_nodes_2edge_88.txt', 'GraphData/val_nodes_4edge_88.txt', 'GraphData/val_nodes_8edge_88.txt', 'GraphData/val_nodes_16edge_88.txt']
 
 counts = [2,4,8,16]
 
@@ -37,7 +37,7 @@ for file, count in zip(files, counts):
         ct = 0
         candidates = get_candidates(count)
         num_nodes = len(candidates)
-        num_random = min(5770,num_nodes)
+        num_random = min(5000,num_nodes)
         if num_random < num_nodes:
             randos = random.sample(candidates, num_random)
         else:
@@ -45,6 +45,6 @@ for file, count in zip(files, counts):
         for item in randos:
             f.write("%s\n" % item)
             ct += 1
-            if ct > 5769:
+            if ct > 4999:
                 break
         print(count, ct)
