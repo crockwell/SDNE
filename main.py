@@ -21,6 +21,7 @@ from utils.utils import *
 import scipy.io as sio
 import time
 import copy
+import numpy as np
 from optparse import OptionParser
 import os
 
@@ -86,14 +87,19 @@ if __name__ == "__main__":
         model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
         sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
     '''
-    all_val_files = ["GraphData/val_nodes_88.txt", "GraphData/val_nodes_2edge_88.txt", "GraphData/val_nodes_8edge_88.txt",
-                    "GraphData/val_nodes_8edge_88.txt", "GraphData/val_nodes_16edge_88.txt"]
-    all_val_nodes = []
-    for file in all_val_files:
-        with open(file) as f:
-            all_val_nodes.append(map(int, f))
-    all_val_rules = ['normal', '2 edge min', '4 edge min', '8 edge min', '16 edge min']
-        
+    model.save_model(os.path.join(path, 'epoch' + '.model'))
+    #all_val_files = ["GraphData/val_nodes_88.txt", "GraphData/val_nodes_2edge_88.txt", "GraphData/val_nodes_8edge_88.txt",
+    #                "GraphData/val_nodes_8edge_88.txt", "GraphData/val_nodes_16edge_88.txt"]
+    #all_val_nodes = []
+    #for file in all_val_files:
+    #    with open(file) as f:
+    #        all_val_nodes.append(map(int, f))
+    #all_val_rules = ['normal', '2 edge min', '4 edge min', '8 edge min', '16 edge min']
+    with open('GraphData/future_500_node_ids.txt', 'r') as f:
+        test_ids = f.readlines()
+    test_ids = np.array(test_ids).astype(int)
+    print(type(test_ids[0]))
+    #test_ids = set(test_ids)
     
     epochs = int(config.start_epoch)
     batch_n = 0
@@ -101,33 +107,31 @@ if __name__ == "__main__":
     while (True):
         # validate
         if epochs % config.display == 0:
-            ct = 0
-            for val_nodes, val_rule in zip(all_val_nodes, all_val_rules):
-                embedding = None
-                loss = 0
-                length = len(val_nodes)
-                for i in range(10):
-                    start_idx = i*500
-                    sample_nodes = val_nodes[start_idx:start_idx+499]
-                    mini_batch = train_graph_data.sample_val(sample_nodes)
-                    loss += model.get_loss(mini_batch)
-                    if embedding is None:
-                        embedding = model.get_embedding(mini_batch)
-                    else:
-                        embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
-                    
-                print "Epoch : %d, %s , loss : %.3f" % (epochs, val_rule, loss)
-                print >>fout, "Epoch : %d, %s , loss : %.3f" % (epochs, val_rule, loss)
-
-                if config.check_reconstruction:
-                    print >> fout, epochs, "reconstruction:", check_reconstruction(embedding, train_graph_data, config.check_reconstruction, val_nodes, val_rule)
-                if config.check_link_prediction:
-                    print >> fout, epochs, "link_prediction:", check_link_prediction(embedding, train_graph_data, origin_graph_data, config.check_link_prediction, val_nodes, val_rule)
-                if config.check_classification:
-                    data, en, N = train_graph_data.sample(train_graph_data.N, do_shuffle = False,  with_label = True)
-                    print >> fout, epochs, "classification", check_multi_label_classification(embedding, data.label)
-            fout.flush()
             model.save_model(os.path.join(path, 'epoch' + '.model'))
+            ct = 0
+            #while (True):
+            embedding = None
+            loss = 0
+            train_graph_data.is_epoch_end = True
+            while (True):
+                mini_batch, en, N = train_graph_data.sample(config.batch_size, do_shuffle = False)
+                loss += model.get_loss(mini_batch)
+                if embedding is None:
+                    embedding = model.get_embedding(mini_batch)
+                else:
+                    embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
+                if train_graph_data.is_epoch_end:
+                    break
+
+            print "Epoch : %d loss : %.3f" % (epochs, loss)
+            print >>fout, "Epoch : %d loss : %.3f" % (epochs, loss)
+            if config.check_link_prediction_test:
+                print >> fout, epochs, "link_prediction_test:", check_link_prediction_test(embedding, train_graph_data, origin_graph_data, config.check_link_prediction_test, test_ids)
+            if config.check_reconstruction:
+                print >> fout, epochs, "reconstruction:", check_reconstruction(embedding, train_graph_data, config.check_reconstruction)
+            if config.check_link_prediction:
+                print >> fout, epochs, "link_prediction:", check_link_prediction(embedding, train_graph_data, origin_graph_data, config.check_link_prediction)
+            fout.flush()
             sio.savemat(path + '/embedding.mat',{'embedding':embedding})
         if epochs >= config.epochs_limit:
             print "exceed epochs limit terminating"

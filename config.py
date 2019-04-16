@@ -36,6 +36,14 @@ class Config(object):
             self.check_link_prediction = [int(i) for i in conf.get("Output", "check_link_prediction").split(',')]
         else:
             self.check_link_prediction = False
+        if conf.has_option("Output", "check_link_prediction_test"):
+            self.check_link_prediction_test = [int(i) for i in conf.get("Output", "check_link_prediction_test").split(',')]
+        else:
+            self.check_link_prediction_test = False       
+        if conf.has_option("Output", "node_test_cutoff"):
+            self.node_test_cutoff = conf.get("Output", "node_test_cutoff")
+        else:
+            self.node_test_cutoff = 0
         if conf.has_option("Output", "check_classification"):
             self.check_classification = True
         else:
