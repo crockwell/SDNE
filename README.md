@@ -7,6 +7,8 @@ This repository adopts implementation of *SDNE* by [suanrong](https://github.com
 
 The *SDNE* algorithm learns a representation for nodes in a graph, and do link prediction and reconstruction. Please check the [paper](http://www.kdd.org/kdd2016/subtopic/view/structural-deep-network-embedding) for more details. Our version is adapted to make future predictions on the [Patent Citation Network](http://www.cs.cmu.edu/~jure/pubs/powergrowth-kdd05.pdf) in addition to normal reconstruction and in-set predictions. Some small changes are made to speed up computation. It is compatable with python2. Our code is modified slightly to run with a GPU. Multiple CPUs (and GPU) are recommended due to memory and time constraints. The model requires tensorflow, version 1.4 was tested.
 
+Corresponding [presentation](data/pres.pdf) and [poster](data/poster.pdf) for [EECS 598: Advanced Data Mining](http://web.eecs.umich.edu/~dkoutra/courses/W19_598/) at the University of Michigan. 
+
 ### Basic Usage on patent citation graph
 ```
 $ python main.py -c config/patent.ini -e <experiment_name>
