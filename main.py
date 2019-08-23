@@ -42,7 +42,6 @@ if __name__ == "__main__":
         
     config = Config(options.config_file)
     
-    #tt = time.ctime().replace(' ','-')
     path = os.path.join("result", config.embedding_filename, options.experiment_name)
     try: os.makedirs(path)
     except OSError: pass
@@ -53,52 +52,19 @@ if __name__ == "__main__":
         origin_graph_data = Graph(config.origin_graph_file, config.ng_sample_ratio)
         
     if config.label_file:
-        #load label for classification
         train_graph_data.load_label_data(config.label_file)
     
     config.struct[0] = train_graph_data.N
         
     model = SDNE(config)
-    restored = model.do_variables_init(train_graph_data) # takes 40 mins per epoch (per layer?)
-    # only need to do this once -- once model loaded is fixed.
+    restored = model.do_variables_init(train_graph_data)
     embedding = None   
     
     fout = open(os.path.join(path, "log.txt"),"a+")  
-    '''
-    if not restored:
-        print('generating embeddings for epoch 0...')
-        ct = 0
-        while (True):
-            mini_batch, en, N = train_graph_data.sample(config.batch_size, do_shuffle = False)
-            if embedding is None:
-                embedding = model.get_embedding(mini_batch)
-            else:
-                embedding = np.vstack((embedding, model.get_embedding(mini_batch))) 
-            if train_graph_data.is_epoch_end:
-                break
-            if en * 10 > N * ct:
-                #print(en/N*100,"% done embedding")
-                #print "%d% done embedding" % (100*en/N)
-                print("{}% done embedding".format(100*en/N))
-                ct += 1
-        #print(np.shape(embedding))
-
-        print('saving model from epoch 0...')
-        model.save_model(os.path.join(path, 'epoch' + str(0) + '.model'))
-        sio.savemat(os.path.join(path, 'embedding.mat'),{'embedding':embedding})
-    '''
     model.save_model(os.path.join(path, 'epoch' + '.model'))
-    #all_val_files = ["GraphData/val_nodes_88.txt", "GraphData/val_nodes_2edge_88.txt", "GraphData/val_nodes_8edge_88.txt",
-    #                "GraphData/val_nodes_8edge_88.txt", "GraphData/val_nodes_16edge_88.txt"]
-    #all_val_nodes = []
-    #for file in all_val_files:
-    #    with open(file) as f:
-    #        all_val_nodes.append(map(int, f))
-    #all_val_rules = ['normal', '2 edge min', '4 edge min', '8 edge min', '16 edge min']
     with open('GraphData/future_500_node_ids.txt', 'r') as f:
         test_ids = f.readlines()
     test_ids = np.array(test_ids).astype(int)
-    print(type(test_ids[0]))
     #test_ids = set(test_ids)
     
     epochs = int(config.start_epoch)
@@ -109,7 +75,6 @@ if __name__ == "__main__":
         if epochs % config.display == 0:
             model.save_model(os.path.join(path, 'epoch' + '.model'))
             ct = 0
-            #while (True):
             embedding = None
             loss = 0
             train_graph_data.is_epoch_end = True
@@ -146,8 +111,6 @@ if __name__ == "__main__":
             mini_batch, en, N = train_graph_data.sample(config.batch_size)
             loss = model.fit(mini_batch)
             if en * 10 > N * ct:
-                #print(en/N*100 + " % done training epoch")
-                #print "%d% done training epoch" % (100*en/N)
                 print("{}% done training epoch".format(100*en/N))
                 ct += 1
 

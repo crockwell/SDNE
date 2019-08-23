@@ -1,32 +1,28 @@
 # SDNE
-This repository provides a reference implementation of *SDNE* as described in the paper:<br>
+This repository adopts implementation of *SDNE* as described in the paper:<br>
 > Structural Deep network Embedding.<br>
 > Daixin Wang, Peng Cui, Wenwu Zhu<br>
 > Knowledge Discovery and Data Mining, 2016.<br>
 > <Insert paper link>
 
-The *SDNE* algorithm learns a representations for nodes in a graph. Please check the [paper](http://www.kdd.org/kdd2016/subtopic/view/structural-deep-network-embedding) for more details. 
+The *SDNE* algorithm learns a representations for nodes in a graph. Please check the [paper](http://www.kdd.org/kdd2016/subtopic/view/structural-deep-network-embedding) for more details. Our version as adapted to make future predictions on the patent citation dataset, and some small changes are made to speed up computation. It is compatable with python2. Our code is modified slightly to run with a GPU. Multiple CPUs (and GPU) are recommended due to memory and time constraints. The model requires tensorflow, version 1.4 was tested.
 
-### Basic Usage
+### Basic Usage on patent citation graph
 ```
-$ python main.py -c config/xx.ini
+$ python main.py -c config/patent.ini -e <experiment_name>
 ```
 >noted: your can just checkout and modify config file or main.py to get what you want.
 ### Input
-Your input graph data should be a **txt** file or a **mat** file and be under **GraphData folder** 
+Input graph data is a **txt** file under **GraphData folder**.
 #### file format
 The txt file should be **edgelist** and **the first line** should be **N** , the number of vertexes and **E**, the number of edges
 
-The mat file should be the adjacent matrix. 
+#### files
+Origin graph file contains all edges while train graph file has 15% of edges missing and is used for training.
+train_graph_file = GraphData/omitted_1988_1990_with_future500.txt
+origin_graph_file = GraphData/full_1988_1990_with_future500.txt
 
-you can save your adjacent matrix using the code below
-
-```
-import scipy.io as sio
-sio.savemat("xxx.mat", {"graph_sparse":your_adjacent_matrix})
-```
-
-It is recommended to use mat file and save the adjacent matrix in a sparse form.
+Files are saved in sparse form.
 
 #### txt file sample
 	5242 14496
@@ -36,8 +32,44 @@ It is recommended to use mat file and save the adjacent matrix in a sparse form.
 	...
 	4525 4526
 
-> noted: The nodeID start from 0.<br>
+> noted: The nodeID starts from 0.<br>
 > noted: The graph should be an undirected graph, so if (I  J) exist in the Input file, (J  I) should not.
+
+#### patent.ini details
+to restore a model on a given epoch, change the following lines:
+restore_model = ./result/patent/sdne_88_test/epoch.model
+start_epoch = 100
+Pretrained model is not included because of size.
+
+The following lines can change batch size, loss weight, and hidden and embedding size
+struct = -1,400,40 # hidden & embedding size 
+
+;the loss func is  // gamma * L1 + alpha * L2 + reg * regularTerm //
+alpha = 100
+gamma = 1
+reg = 1
+
+;the weight balanced value to reconstruct non-zero element more.
+beta = 10
+        
+batch_size = 16
+epochs_limit = 100
+learning_rate = 0.01
+
+dbn_init = True
+dbn_epochs = 200
+dbn_batch_size = 64
+dbn_learning_rate = 0.1
+
+#### Model overview
+The main train / test loop occurs in main.py. It calls utils/utils.py for evaluation. Models are in model/rbm.py and model/sdne.py, and graph operations are in graph.py.
+
+### Basic Usage on Blogcatalog
+This is very similar! Simply call blogcatalog.ini instead
+```
+$ python main.py -c config/blogcatalog.ini -e <experiment_name>
+```
+
 ### Citing
 If you find *SDNE* useful in your research, we ask that you cite the following paper:
 

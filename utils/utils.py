@@ -95,7 +95,6 @@ def check_link_prediction_test(embedding, train_graph_data, origin_graph_data, c
             x = ind / N
             y = ind % N
             x_new = test_ids[x]
-            #print(x_new,y)
             if (x_new == y or train_graph_data.adj_matrix[x_new].toarray()[0][y] == 1):
                 continue 
             if y in settest:
