@@ -1,19 +1,20 @@
 # SDNE
-This repository adopts implementation of *SDNE* as described in the paper:<br>
+This repository adopts implementation of *SDNE* by [suanrong](https://github.com/suanrong/SDNE) as described in the paper:<br>
 > Structural Deep network Embedding.<br>
 > Daixin Wang, Peng Cui, Wenwu Zhu<br>
 > Knowledge Discovery and Data Mining, 2016.<br>
 > <Insert paper link>
 
-The *SDNE* algorithm learns a representations for nodes in a graph. Please check the [paper](http://www.kdd.org/kdd2016/subtopic/view/structural-deep-network-embedding) for more details. Our version as adapted to make future predictions on the patent citation dataset, and some small changes are made to speed up computation. It is compatable with python2. Our code is modified slightly to run with a GPU. Multiple CPUs (and GPU) are recommended due to memory and time constraints. The model requires tensorflow, version 1.4 was tested.
+The *SDNE* algorithm learns a representation for nodes in a graph, and do link prediction and reconstruction. Please check the [paper](http://www.kdd.org/kdd2016/subtopic/view/structural-deep-network-embedding) for more details. Our version is adapted to make future predictions on the [Patent Citation Network](http://www.cs.cmu.edu/~jure/pubs/powergrowth-kdd05.pdf) in addition to normal reconstruction and in-set predictions. Some small changes are made to speed up computation. It is compatable with python2. Our code is modified slightly to run with a GPU. Multiple CPUs (and GPU) are recommended due to memory and time constraints. The model requires tensorflow, version 1.4 was tested.
 
 ### Basic Usage on patent citation graph
 ```
 $ python main.py -c config/patent.ini -e <experiment_name>
 ```
->noted: your can just checkout and modify config file or main.py to get what you want.
+>modify config file to tune hyperparameters or change dataset
+
 ### Input
-Input graph data is a **txt** file under **GraphData folder**.
+Input graph data is a **txt** file under **GraphData folder**. A small subset (1988-1989, inclusive) of the Patent Citation Network is included
 #### file format
 The txt file should be **edgelist** and **the first line** should be **N** , the number of vertexes and **E**, the number of edges
 
@@ -37,8 +38,8 @@ Files are saved in sparse form.
 
 #### patent.ini details
 to restore a model on a given epoch, change the following lines:
-restore_model = ./result/patent/sdne_88_test/epoch.model
-start_epoch = 100
+restore_model = ./result/patent/<model_name>/epoch.model
+start_epoch = xx
 Pretrained model is not included because of size.
 
 The following lines can change batch size, loss weight, and hidden and embedding size
@@ -62,13 +63,7 @@ dbn_batch_size = 64
 dbn_learning_rate = 0.1
 
 #### Model overview
-The main train / test loop occurs in main.py. It calls utils/utils.py for evaluation. Models are in model/rbm.py and model/sdne.py, and graph operations are in graph.py.
-
-### Basic Usage on Blogcatalog
-This is very similar! Simply call blogcatalog.ini instead
-```
-$ python main.py -c config/blogcatalog.ini -e <experiment_name>
-```
+The main train / test loop occurs in main.py. It calls utils/utils.py for evaluation. Models are in model/rbm.py and model/sdne.py, and graph operations are in graph.py. Both reconstruction and link prediction are measured.
 
 ### Citing
 If you find *SDNE* useful in your research, we ask that you cite the following paper:
